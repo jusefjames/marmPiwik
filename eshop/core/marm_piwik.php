@@ -24,7 +24,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
- 
+
+// 2012-10-17 marcusp: Added new config value "piwik_ssl_url"
 class marm_piwik {
 
     const VERSION = '0.5';
@@ -38,6 +39,10 @@ class marm_piwik {
         ),
         'piwik_url' => array(
             'value'=> 'http://yourshopurl.com/piwik/piwik.php',
+            'input_type' => 'text'
+        ),
+        'piwik_ssl_url' => array(
+            'value'=> '',
             'input_type' => 'text'
         ),
         'tracking_method' => array(
@@ -146,34 +151,57 @@ class marm_piwik {
         return (int) $this->getConfigValue('piwik_site_id');
     }
 
+	// 2012-10-17 marcusp: New function
+    /**
+     * returns stripped value of url
+     * @return string
+     */
+    public function stripUrl($sUrl) {
+		$sUrl = str_replace(
+            array (
+                'http://',
+                'https://',
+				'www.',
+				'/piwik.js',
+				'/proxy.php',
+                '/proxy-piwik.php',
+                '/piwik.php'
+            ),
+            '',
+            $sUrl
+        );
+		//Remove '/' on last position
+		if(substr($sUrl,-1) == '/')
+			$sUrl = substr($sUrl, 0, -1);
+	return $sUrl;
+	}
+
+	// 2012-10-17 marcusp: Changed to always strip url
     /**
      * returns config parameter for PIWIK URL
      * @return string
      */
-    public function getPiwikUrl($blFull = true)
+    public function getPiwikUrl()
     {
         $sUrl = $this->getConfigValue('piwik_url');
-        if (!$blFull) {
-            $sUrl = str_replace(
-                array (
-                    'http://',
-                    'https://'
-                ),
-                '',
-                $sUrl
-            );
-            $sUrl = str_replace(
-                array (
-                    '/proxy.php',
-                    '/proxy-piwik.php',
-                    '/piwik.php'
-                ),
-                '/',
-                $sUrl
-            );
-         }
-        return $sUrl;
+        return $this->stripUrl($sUrl);
     }
+
+	// 2012-10-17 marcusp: New function
+    /**
+     * returns config parameter for PIWIK SSL URL
+     * @return string
+     */
+    public function getPiwikSSLUrl()
+    {
+        $sUrl = $this->getConfigValue('piwik_ssl_url');
+        if (strlen(trim($sUrl)) == 0) {
+            return $this->getPiwikUrl(false);
+        }
+        else {
+	        return $this->stripUrl($sUrl);
+        }
+	}
 
     /**
      * returns config parameter for Newsletter Goal ID
@@ -247,6 +275,7 @@ class marm_piwik {
         return $sReturn;
     }
 
+	// 2012-10-17 marcusp: Added "OR $oViewObject->getArticleCount()"
     /**
      * @param Search $oViewObject
      * @return void
@@ -255,7 +284,11 @@ class marm_piwik {
     {
         // seems like deprecated but needed for downwards compatibility
         // better use $oViewObject->getArticleCount() at a later time
-        if($oViewObject->getPageNavigation()->iArtCnt > 0) {
+
+		// Shop Version 4.6.5:
+		// $oViewObject->getPageNavigation()->iArtCnt always returns: "" (empty string)
+		// $oViewObject->getArticleCount() returns correct values: 0 OR NUMBER (as it should be)
+        if($oViewObject->getPageNavigation()->iArtCnt > 0 OR $oViewObject->getArticleCount() > 0) {
             $this->addPushParams(
                 'setCustomVariable',
                 1,
@@ -438,6 +471,7 @@ class marm_piwik {
         }
     }
 
+	// 2012-10-17 marcusp: Added SSL Url in javascript and <noscript> tag, added "/" to path because Urls are always stripped now
     /**
      * returns HTML string with PIWIK javascript source and params
      * @return string
@@ -449,12 +483,12 @@ class marm_piwik {
         $sMarmPiwikCode .= '
                             var _paq = _paq || [];
                             (function(){
-                                var u=(("https:" == document.location.protocol) ? "https://'.$this->getPiwikUrl(false).'" : "http://'.$this->getPiwikUrl(false).'");
+                                var u=(("https:" == document.location.protocol) ? "https://'.$this->getPiwikSSLUrl().'" : "http://'.$this->getPiwikUrl().'");
                                 ';
 
 //            $this->_aPushParams = array();
         $this->addPushParams('setSiteId',     $this->getPiwikSiteId());
-        $this->addPushParams('setTrackerUrl', array('type'=>'raw', 'value' => "u+'piwik.php'"));
+        $this->addPushParams('setTrackerUrl', array('type'=>'raw', 'value' => "u+'/piwik.php'"));
 
         $this->_setPiwikParamsByViewObject();
 
@@ -469,13 +503,19 @@ class marm_piwik {
                                     g.type=\'text/javascript\';
                                     g.defer=true;
                                     g.async=true;
-                                    g.src=u+\'piwik.js\';
+                                    g.src=u+\'/piwik.js\';
                                     s.parentNode.insertBefore(g,s);
                             })();';
         $sMarmPiwikCode .= '</script>';
-        $sMarmPiwikCode .= '
-                            <noscript>
-                                <img src="'.$this->getPiwikUrl().'?idsite='.$this->getPiwikSiteId().'&rec=1" style="border:0" alt="" />
+        $sMarmPiwikCode .= '<noscript>
+                                <img src="';
+		if(oxConfig::getInstance()->isSSl()) {
+			$sMarmPiwikCode .= 'https://'.$this->getPiwikSSLUrl();
+		}
+		else {
+			$sMarmPiwikCode .= 'http://'.$this->getPiwikUrl();
+		}
+		$sMarmPiwikCode .= '/piwik.php?idsite='.$this->getPiwikSiteId().'&rec=1" style="border:0" alt="" />
                             </noscript>
                             <!-- End Piwik -->';
         return $sMarmPiwikCode;

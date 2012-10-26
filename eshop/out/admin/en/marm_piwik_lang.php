@@ -25,6 +25,8 @@
  * IN THE SOFTWARE.
  */
 
+// 2012-10-17 marcusp: Added "piwik_ssl_url"
+
 $sLangName  = "English";
 
 // -------------------------------
@@ -35,6 +37,7 @@ $aLang = array(
     'tbclmarm_piwik_setup'							=> 'Piwik',
     'MARM_PIWIK_CONFIG_piwik_site_id' 				=> 'Piwik SiteId',
     'MARM_PIWIK_CONFIG_piwik_url' 					=> 'Piwik URL',
+    'MARM_PIWIK_CONFIG_piwik_ssl_url'				=> 'Piwik SSL URL (only if different, leave empty instead)',
     'MARM_PIWIK_CONFIG_newsletter_goal_id' 			=> 'Newsletter goal ID',
     'MARM_PIWIK_CONFIG_tracking_method' 			=> 'Choose tracking method (Pro-Version only)',
     'MARM_PIWIK_CONFIG_tracking_method_php' 		=> 'Serverside by PHP (Pro-Version only)',

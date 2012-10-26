@@ -1,3 +1,7 @@
+<!-- 2012-10-17 marcusp:	Added oxinputhelp after each config value
+							Added oxid parameter in transfer form
+-->
+
 [{include file="headitem.tpl" title="GENERAL_ADMIN_TITLE"|oxmultilangassign}]
 [{ if $readonly }]
 [{assign var="readonly" value="readonly disabled"}]
@@ -6,6 +10,7 @@
 [{/if}]
 <form name="transfer" id="transfer" action="[{ $oViewConf->getSelfLink() }]" method="post">
     [{ $oViewConf->getHiddenSid() }]
+	<input type="hidden" name="oxid" value="[{ $oxid }]">
     <input type="hidden" name="cl" value="marm_piwik_setup">
     <input type="hidden" name="language" value="[{ $actlang }]">
 </form>
@@ -34,6 +39,7 @@
 								[{/foreach}]
 							</select>
 							[{/if}]
+							[{ oxinputhelp ident="HELP_MARM_PIWIK_CONFIG_"|cat:$sConfigKey }]
 						</td>
 						
 					</tr>
@@ -54,14 +60,13 @@
 			<td align="center" valign="top">
 				<div>
 				<strong>Sponsoring by:</strong><br />
-					<a href="http://www.haller-stahlwaren.de/" target=_blank" title="Hebsacker Stahlwaren">
+					<a href="http://www.haller-stahlwaren.de/" target="_blank" title="Hebsacker Stahlwaren">
 					<img src="[{$oViewConf->getResourceUrl()}]marmpiwik/hebsacker.gif" align="center" />
-					</a>
 					</a><br /><br />
-					<a href="http://www.wtc-productions.de/" target=_blank" title="WTC Media Productions">
+					<a href="http://www.wtc-productions.de/" target="_blank" title="WTC Media Productions">
 					<img src="[{$oViewConf->getResourceUrl()}]marmpiwik/wtc.gif" align="center" />
 					</a><br /><br />
-					<a href="http://www.marmalade.de/" target=_blank" title="marmalade.de :: Webdesign">
+					<a href="http://www.marmalade.de/" target="_blank" title="marmalade.de :: Webdesign">
 					<img src="[{$oViewConf->getResourceUrl()}]marmpiwik/marmalade.gif" align="center" />
 				</div>
 			</td>
